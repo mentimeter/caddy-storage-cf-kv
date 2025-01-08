@@ -31,7 +31,6 @@ type CloudflareKVStorage struct {
 	NamespaceID       string `json:"namespace_id,omitempty"` // KV Namespace ID
 }
 
-// StorageData describe the data that is stored in KV storage (similar to your Redis example)
 type StorageData struct {
 	Value    []byte    `json:"value"`
 	Modified time.Time `json:"modified"`
@@ -46,7 +45,6 @@ var (
 	_ certmagic.Storage      = (*CloudflareKVStorage)(nil)
 )
 
-// CaddyModule returns the Caddy module information.
 func (CloudflareKVStorage) CaddyModule() caddy.ModuleInfo {
 	return caddy.ModuleInfo{
 		ID: "caddy.storage.cloudflare_kv",
@@ -56,12 +54,10 @@ func (CloudflareKVStorage) CaddyModule() caddy.ModuleInfo {
 	}
 }
 
-// CertMagicStorage converts s to a certmagic.Storage instance.
 func (s *CloudflareKVStorage) CertMagicStorage() (certmagic.Storage, error) {
 	return s, nil
 }
 
-// UnmarshalCaddyfile sets up the module from Caddyfile tokens.
 func (s *CloudflareKVStorage) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 	for d.Next() {
 		key := d.Val()
@@ -82,17 +78,14 @@ func (s *CloudflareKVStorage) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 	return nil
 }
 
-// Provision is called once to set up the module.
 func (s *CloudflareKVStorage) Provision(ctx caddy.Context) error {
 	s.Logger = ctx.Logger(s).Sugar()
-	s.replaceEnvVars()
 	s.ctx = ctx.Context
 
 	if s.APIToken == "" {
 		return fmt.Errorf("api_token must be provided")
 	}
 
-	// Build the Cloudflare client
 	var err error
 	s.client, err = cloudflare.NewWithAPIToken(s.APIToken)
 	if err != nil {
@@ -151,7 +144,6 @@ func (s *CloudflareKVStorage) Store(_ context.Context, key string, value []byte)
 	return nil
 }
 
-// Load retrieves the value at key.
 func (s *CloudflareKVStorage) Load(_ context.Context, key string) ([]byte, error) {
 	dataBytes, err := s.getData(key)
 	if err != nil {
@@ -166,12 +158,10 @@ func (s *CloudflareKVStorage) Load(_ context.Context, key string) ([]byte, error
 	return data.Value, nil
 }
 
-// Delete deletes key.
 func (s *CloudflareKVStorage) Delete(_ context.Context, key string) error {
-	// Check existence
 	_, err := s.getData(key)
 	if err != nil {
-		return err // either not found or some other error
+		return err
 	}
 
 	params := cloudflare.DeleteWorkersKVEntryParams{
@@ -185,17 +175,14 @@ func (s *CloudflareKVStorage) Delete(_ context.Context, key string) error {
 	return nil
 }
 
-// Exists returns true if the key exists
 func (s *CloudflareKVStorage) Exists(_ context.Context, key string) bool {
 	_, err := s.getData(key)
 	return err == nil
 }
 
-// List returns all keys that match prefix (or immediate entries if not recursive).
 func (s *CloudflareKVStorage) List(_ context.Context, path string, recursive bool) ([]string, error) {
 	var allKeys []string
 
-	// Cloudflare KV allows listing keys by prefix, with pagination.
 	cursor := ""
 	for {
 		resp, err := s.client.ListWorkersKVKeys(s.ctx, s.resourceContainer, cloudflare.ListWorkersKVsParams{
@@ -231,7 +218,6 @@ func (s *CloudflareKVStorage) List(_ context.Context, path string, recursive boo
 	return keysFound, nil
 }
 
-// Stat returns information about key.
 func (s *CloudflareKVStorage) Stat(_ context.Context, key string) (certmagic.KeyInfo, error) {
 	dataBytes, err := s.getData(key)
 	if err != nil {
@@ -277,7 +263,7 @@ func (s *CloudflareKVStorage) getData(fullKey string) ([]byte, error) {
 	return []byte(val), nil
 }
 
-// Helper: get string from env var if not already set
+// get string from env var if not already set
 func strEnvOrDefault(current, envVar, def string) string {
 	if current != "" {
 		return current
@@ -288,11 +274,12 @@ func strEnvOrDefault(current, envVar, def string) string {
 	return def
 }
 
-// String is a debug representation (with sensitive info redacted).
 func (s CloudflareKVStorage) String() string {
 	type Redacted CloudflareKVStorage
+
 	r := Redacted(s)
 	r.APIToken = "REDACTED"
+
 	out, _ := json.Marshal(r)
 	return string(out)
 }
