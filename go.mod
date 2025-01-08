@@ -5,8 +5,11 @@ go 1.23.4
 require github.com/caddyserver/caddy/v2 v2.9.0
 
 require (
-	github.com/goccy/go-json v0.10.4 // indirect
-	github.com/google/go-querystring v1.1.0 // indirect
+	github.com/stretchr/testify v1.10.0 // indirect
+	github.com/tidwall/gjson v1.14.4 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.1 // indirect
+	github.com/tidwall/sjson v1.2.5 // indirect
 )
 
 require (
@@ -14,7 +17,7 @@ require (
 	github.com/caddyserver/certmagic v0.21.5
 	github.com/caddyserver/zerossl v0.1.3 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/cloudflare/cloudflare-go v0.113.0
+	github.com/cloudflare/cloudflare-go/v3 v3.1.0
 	github.com/francoispqt/gojay v1.2.13 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
 	github.com/google/pprof v0.0.0-20231212022811-ec68065c825e // indirect
