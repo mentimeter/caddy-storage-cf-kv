@@ -1,4 +1,4 @@
-package storagecloudflarekv
+package caddy_storage_cf_kv
 
 import (
 	"context"
@@ -30,11 +30,6 @@ type CloudflareKVStorage struct {
 	APIToken    string `json:"api_token,omitempty"`    // The Cloudflare API token
 	AccountID   string `json:"account_id,omitempty"`   // Cloudflare Account ID
 	NamespaceID string `json:"namespace_id,omitempty"` // KV Namespace ID
-
-	// In real usage, you might want to add encryption like in the Redis example:
-	// AesKey string `json:"aes_key,omitempty"`
-
-	// Add any additional fields as needed...
 }
 
 // StorageData describe the data that is stored in KV storage (similar to your Redis example)
@@ -66,7 +61,7 @@ func (s *CloudflareKVStorage) CertMagicStorage() (certmagic.Storage, error) {
 	return s, nil
 }
 
-// UnmarshalCaddyfile sets up the module from Caddyfile tokens. (Optional)
+// UnmarshalCaddyfile sets up the module from Caddyfile tokens.
 func (s *CloudflareKVStorage) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 	for d.Next() {
 		key := d.Val()
