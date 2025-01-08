@@ -111,7 +111,7 @@ func (s *CloudflareKVStorage) Provision(ctx caddy.Context) error {
 
 	_, err = s.client.ListWorkersKVKeys(s.ctx, s.resourceContainer, cloudflare.ListWorkersKVsParams{
 		NamespaceID: s.NamespaceID,
-		Limit:       1,
+		Limit:       10,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to verify Cloudflare KV namespace: %v", err)
