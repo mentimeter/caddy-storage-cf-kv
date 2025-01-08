@@ -7,7 +7,6 @@ import (
 	"io/fs"
 	"os"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/caddyserver/caddy/v2"
@@ -26,7 +25,6 @@ type CloudflareKVStorage struct {
 	Logger      *zap.SugaredLogger `json:"-"`
 	ctx         context.Context
 	client      *cloudflare.API
-	locks       *sync.Map
 	APIToken    string `json:"api_token,omitempty"`    // The Cloudflare API token
 	AccountID   string `json:"account_id,omitempty"`   // Cloudflare Account ID
 	NamespaceID string `json:"namespace_id,omitempty"` // KV Namespace ID
@@ -118,7 +116,6 @@ func (s *CloudflareKVStorage) Provision(ctx caddy.Context) error {
 		return fmt.Errorf("failed to verify Cloudflare KV namespace: %v", err)
 	}
 
-	s.locks = &sync.Map{}
 	s.Logger.Infof("Cloudflare KV Storage initialized for namespace %s'", s.NamespaceID)
 	return nil
 }
