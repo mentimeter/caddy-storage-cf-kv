@@ -104,17 +104,17 @@ func (s *CloudflareKVStorage) Provision(ctx caddy.Context) error {
 		return fmt.Errorf("error creating Cloudflare client: %v", err)
 	}
 
+	s.resourceContainer = &cloudflare.ResourceContainer{
+		Level:      cloudflare.AccountRouteLevel,
+		Identifier: s.AccountID,
+	}
+
 	_, err = s.client.ListWorkersKVKeys(s.ctx, s.resourceContainer, cloudflare.ListWorkersKVsParams{
 		NamespaceID: s.NamespaceID,
 		Limit:       1,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to verify Cloudflare KV namespace: %v", err)
-	}
-
-	s.resourceContainer = &cloudflare.ResourceContainer{
-		Level:      cloudflare.AccountRouteLevel,
-		Identifier: s.AccountID,
 	}
 
 	s.Logger.Infof("Cloudflare KV Storage initialized for namespace %s'", s.NamespaceID)
