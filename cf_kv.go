@@ -22,12 +22,13 @@ func init() {
 
 // CloudflareKVStorage implements a Caddy storage backend for Cloudflare KV
 type CloudflareKVStorage struct {
-	Logger      *zap.SugaredLogger `json:"-"`
-	ctx         context.Context
-	client      *cloudflare.API
-	APIToken    string `json:"api_token,omitempty"`    // The Cloudflare API token
-	AccountID   string `json:"account_id,omitempty"`   // Cloudflare Account ID
-	NamespaceID string `json:"namespace_id,omitempty"` // KV Namespace ID
+	Logger            *zap.SugaredLogger `json:"-"`
+	ctx               context.Context
+	client            *cloudflare.API
+	resourceContainer *cloudflare.ResourceContainer
+	APIToken          string `json:"api_token,omitempty"`    // The Cloudflare API token
+	AccountID         string `json:"account_id,omitempty"`   // Cloudflare Account ID
+	NamespaceID       string `json:"namespace_id,omitempty"` // KV Namespace ID
 }
 
 // StorageData describe the data that is stored in KV storage (similar to your Redis example)
@@ -87,28 +88,22 @@ func (s *CloudflareKVStorage) Provision(ctx caddy.Context) error {
 	s.replaceEnvVars()
 	s.ctx = ctx.Context
 
-	// Build the Cloudflare client
 	if s.APIToken == "" {
 		return fmt.Errorf("api_token must be provided")
 	}
 
+	// Build the Cloudflare client
 	var err error
 	s.client, err = cloudflare.NewWithAPIToken(s.APIToken)
 	if err != nil {
 		return fmt.Errorf("error creating Cloudflare client: %v", err)
 	}
 
-	// Check if the account + namespace is accessible
 	if s.AccountID == "" || s.NamespaceID == "" {
 		return fmt.Errorf("both account_id and namespace_id must be provided")
 	}
 
-	// Sample test call to verify it works (optional):
-	rc := &cloudflare.ResourceContainer{
-		Level:      cloudflare.AccountRouteLevel,
-		Identifier: s.AccountID,
-	}
-	_, err = s.client.ListWorkersKVKeys(s.ctx, rc, cloudflare.ListWorkersKVsParams{
+	_, err = s.client.ListWorkersKVKeys(s.ctx, s.resourceContainer, cloudflare.ListWorkersKVsParams{
 		NamespaceID: s.NamespaceID,
 		Limit:       1,
 	})
@@ -117,6 +112,12 @@ func (s *CloudflareKVStorage) Provision(ctx caddy.Context) error {
 	}
 
 	s.Logger.Infof("Cloudflare KV Storage initialized for namespace %s'", s.NamespaceID)
+
+	s.resourceContainer = &cloudflare.ResourceContainer{
+		Level:      cloudflare.AccountRouteLevel,
+		Identifier: s.AccountID,
+	}
+
 	return nil
 }
 
@@ -125,8 +126,6 @@ func (s *CloudflareKVStorage) replaceEnvVars() {
 	s.APIToken = strEnvOrDefault(s.APIToken, "CADDY_CLOUDFLARE_API_TOKEN", "")
 	s.AccountID = strEnvOrDefault(s.AccountID, "CADDY_CLOUDFLARE_ACCOUNT_ID", "")
 	s.NamespaceID = strEnvOrDefault(s.NamespaceID, "CADDY_CLOUDFLARE_NAMESPACE_ID", "")
-
-	// Expand similarly for UseTLS, Insecure, etc., if desired
 }
 
 // Store stores data at key.
@@ -140,15 +139,11 @@ func (s *CloudflareKVStorage) Store(_ context.Context, key string, value []byte)
 		return fmt.Errorf("unable to encode data for key %s: %v", key, err)
 	}
 
-	rc := &cloudflare.ResourceContainer{
-		Level:      cloudflare.AccountRouteLevel,
-		Identifier: s.AccountID,
-	}
 	params := cloudflare.WriteWorkersKVEntryParams{
 		Key:   key,
 		Value: serialized,
 	}
-	_, err = s.client.WriteWorkersKVEntry(s.ctx, rc, params)
+	_, err = s.client.WriteWorkersKVEntry(s.ctx, s.resourceContainer, params)
 	if err != nil {
 		return fmt.Errorf("failed to write KV entry: %v", err)
 	}
@@ -179,14 +174,10 @@ func (s *CloudflareKVStorage) Delete(_ context.Context, key string) error {
 		return err // either not found or some other error
 	}
 
-	rc := &cloudflare.ResourceContainer{
-		Level:      cloudflare.AccountRouteLevel,
-		Identifier: s.AccountID,
-	}
 	params := cloudflare.DeleteWorkersKVEntryParams{
 		Key: key,
 	}
-	_, err = s.client.DeleteWorkersKVEntry(s.ctx, rc, params)
+	_, err = s.client.DeleteWorkersKVEntry(s.ctx, s.resourceContainer, params)
 	if err != nil {
 		return fmt.Errorf("failed to delete KV entry: %v", err)
 	}
@@ -207,9 +198,7 @@ func (s *CloudflareKVStorage) List(_ context.Context, path string, recursive boo
 	// Cloudflare KV allows listing keys by prefix, with pagination.
 	cursor := ""
 	for {
-		resp, err := s.client.ListWorkersKVKeys(s.ctx, &cloudflare.ResourceContainer{
-			Level: cloudflare.AccountRouteLevel,
-		}, cloudflare.ListWorkersKVsParams{
+		resp, err := s.client.ListWorkersKVKeys(s.ctx, s.resourceContainer, cloudflare.ListWorkersKVsParams{
 			NamespaceID: s.NamespaceID,
 			Cursor:      cursor,
 		})
@@ -270,10 +259,7 @@ func (s *CloudflareKVStorage) Unlock(_ context.Context, key string) error {
 
 // getData is a helper that fetches the raw value from Cloudflare KV.
 func (s *CloudflareKVStorage) getData(fullKey string) ([]byte, error) {
-	val, err := s.client.GetWorkersKV(s.ctx, &cloudflare.ResourceContainer{
-		Level:      cloudflare.AccountRouteLevel,
-		Identifier: s.AccountID,
-	}, cloudflare.GetWorkersKVParams{
+	val, err := s.client.GetWorkersKV(s.ctx, s.resourceContainer, cloudflare.GetWorkersKVParams{
 		NamespaceID: s.NamespaceID,
 		Key:         fullKey,
 	})
