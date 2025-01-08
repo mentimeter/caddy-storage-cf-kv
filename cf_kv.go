@@ -17,6 +17,10 @@ import (
 	"go.uber.org/zap"
 )
 
+func init() {
+	caddy.RegisterModule(CloudflareKVStorage{})
+}
+
 // CloudflareKVStorage is the main struct implementing certmagic.Storage
 type CloudflareKVStorage struct {
 	Logger      *zap.SugaredLogger `json:"-"`
