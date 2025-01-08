@@ -21,7 +21,7 @@ func init() {
 	caddy.RegisterModule(CloudflareKVStorage{})
 }
 
-// CloudflareKVStorage is the main struct implementing certmagic.Storage
+// CloudflareKVStorage implements a Caddy storage backend for Cloudflare KV
 type CloudflareKVStorage struct {
 	Logger      *zap.SugaredLogger `json:"-"`
 	ctx         context.Context
