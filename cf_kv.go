@@ -16,6 +16,15 @@ import (
 	"go.uber.org/zap"
 )
 
+// Interface guards
+var (
+	_ caddy.Module           = (*CloudflareKVStorage)(nil)
+	_ caddy.StorageConverter = (*CloudflareKVStorage)(nil)
+	_ caddyfile.Unmarshaler  = (*CloudflareKVStorage)(nil)
+	_ caddy.Provisioner      = (*CloudflareKVStorage)(nil)
+	_ certmagic.Storage      = (*CloudflareKVStorage)(nil)
+)
+
 func init() {
 	caddy.RegisterModule(CloudflareKVStorage{})
 }
@@ -35,15 +44,6 @@ type StorageData struct {
 	Value    []byte    `json:"value"`
 	Modified time.Time `json:"modified"`
 }
-
-// Interface guards
-var (
-	_ caddy.Module           = (*CloudflareKVStorage)(nil)
-	_ caddy.StorageConverter = (*CloudflareKVStorage)(nil)
-	_ caddyfile.Unmarshaler  = (*CloudflareKVStorage)(nil)
-	_ caddy.Provisioner      = (*CloudflareKVStorage)(nil)
-	_ certmagic.Storage      = (*CloudflareKVStorage)(nil)
-)
 
 func (CloudflareKVStorage) CaddyModule() caddy.ModuleInfo {
 	return caddy.ModuleInfo{
