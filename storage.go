@@ -90,14 +90,18 @@ func (s *CloudflareKVStorage) Provision(ctx caddy.Context) error {
 		return fmt.Errorf("api_token must be provided")
 	}
 
+	if s.AccountID == "" {
+		return fmt.Errorf("account_id must be provided")
+	}
+
+	if s.NamespaceID == "" {
+		return fmt.Errorf("namespace_id must be provided")
+	}
+
 	var err error
 	s.client, err = cloudflare.NewWithAPIToken(s.APIToken)
 	if err != nil {
 		return fmt.Errorf("error creating Cloudflare client: %v", err)
-	}
-
-	if s.AccountID == "" || s.NamespaceID == "" {
-		return fmt.Errorf("both account_id and namespace_id must be provided")
 	}
 
 	_, err = s.client.ListWorkersKVKeys(s.ctx, s.resourceContainer, cloudflare.ListWorkersKVsParams{
@@ -108,12 +112,12 @@ func (s *CloudflareKVStorage) Provision(ctx caddy.Context) error {
 		return fmt.Errorf("failed to verify Cloudflare KV namespace: %v", err)
 	}
 
-	s.Logger.Infof("Cloudflare KV Storage initialized for namespace %s'", s.NamespaceID)
-
 	s.resourceContainer = &cloudflare.ResourceContainer{
 		Level:      cloudflare.AccountRouteLevel,
 		Identifier: s.AccountID,
 	}
+
+	s.Logger.Infof("Cloudflare KV Storage initialized for namespace %s'", s.NamespaceID)
 
 	return nil
 }
