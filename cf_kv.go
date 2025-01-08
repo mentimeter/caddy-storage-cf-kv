@@ -82,6 +82,10 @@ func (s *CloudflareKVStorage) Provision(ctx caddy.Context) error {
 	s.Logger = ctx.Logger(s).Sugar()
 	s.ctx = ctx.Context
 
+	s.APIToken = strEnvOrDefault(s.APIToken, "CADDY_CLOUDFLARE_API_TOKEN", "")
+	s.AccountID = strEnvOrDefault(s.AccountID, "CADDY_CLOUDFLARE_ACCOUNT_ID", "")
+	s.NamespaceID = strEnvOrDefault(s.NamespaceID, "CADDY_CLOUDFLARE_NAMESPACE_ID", "")
+
 	if s.APIToken == "" {
 		return fmt.Errorf("api_token must be provided")
 	}
@@ -114,14 +118,6 @@ func (s *CloudflareKVStorage) Provision(ctx caddy.Context) error {
 	return nil
 }
 
-// replaceEnvVars reads environment variables to override config if needed
-func (s *CloudflareKVStorage) replaceEnvVars() {
-	s.APIToken = strEnvOrDefault(s.APIToken, "CADDY_CLOUDFLARE_API_TOKEN", "")
-	s.AccountID = strEnvOrDefault(s.AccountID, "CADDY_CLOUDFLARE_ACCOUNT_ID", "")
-	s.NamespaceID = strEnvOrDefault(s.NamespaceID, "CADDY_CLOUDFLARE_NAMESPACE_ID", "")
-}
-
-// Store stores data at key.
 func (s *CloudflareKVStorage) Store(_ context.Context, key string, value []byte) error {
 	data := &StorageData{
 		Value:    value,
