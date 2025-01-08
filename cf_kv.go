@@ -40,6 +40,7 @@ type StorageData struct {
 
 // Interface guards
 var (
+	_ caddy.Module           = (*CloudflareKVStorage)(nil)
 	_ caddy.StorageConverter = (*CloudflareKVStorage)(nil)
 	_ caddyfile.Unmarshaler  = (*CloudflareKVStorage)(nil)
 	_ caddy.Provisioner      = (*CloudflareKVStorage)(nil)
