@@ -263,7 +263,7 @@ func (s *CloudflareKVStorage) Stat(ctx context.Context, key string) (certmagic.K
 		Key:        key,
 		Modified:   data.Modified,
 		Size:       int64(len(dataBytes)),
-		IsTerminal: false,
+		IsTerminal: true,
 	}, nil
 }
 
