@@ -2,6 +2,7 @@ package caddy_storage_cf_kv
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -42,9 +43,13 @@ type CloudflareKVStorage struct {
 	NamespaceID string `json:"namespace_id,omitempty"` // KV Namespace ID
 }
 
-type StorageData struct {
-	Value    []byte    `json:"value"`
+type Metadata struct {
 	Modified time.Time `json:"modified"`
+}
+
+type LoadValueResponse struct {
+	MetadataJsonString string `json:"metadata"`
+	Value              string `json:"value"`
 }
 
 func (CloudflareKVStorage) CaddyModule() caddy.ModuleInfo {
@@ -124,18 +129,20 @@ func (s *CloudflareKVStorage) Provision(ctx caddy.Context) error {
 func (s *CloudflareKVStorage) Store(_ context.Context, key string, value []byte) error {
 	s.Logger.Infof("Storing key '%s'", key)
 
-	data := &StorageData{
-		Value:    value,
+	metadata := &Metadata{
 		Modified: time.Now(),
 	}
-	serialized, err := json.Marshal(data)
+	serializedMetadata, err := json.Marshal(metadata)
 	if err != nil {
-		return fmt.Errorf("unable to encode data for key %s: %v", key, err)
+		return fmt.Errorf("unable to encode metadata for key %s: %v", key, err)
 	}
+
+	encodedValue := base64.StdEncoding.EncodeToString(value)
 
 	_, err = s.client.KV.Namespaces.Values.Update(s.ctx, s.NamespaceID, key, kv.NamespaceValueUpdateParams{
 		AccountID: cloudflare.F(s.AccountID),
-		Value:     cloudflare.F(string(serialized)),
+		Metadata:  cloudflare.F(string(serializedMetadata)),
+		Value:     cloudflare.F(encodedValue),
 	})
 	if err != nil {
 		return fmt.Errorf("failed to write KV entry: %v", err)
@@ -168,12 +175,18 @@ func (s *CloudflareKVStorage) Load(_ context.Context, key string) ([]byte, error
 		return nil, fmt.Errorf("Cloudflare responded with %s: %s", resp.Status, val)
 	}
 
-	var data StorageData
-	err = json.Unmarshal(val, &data)
+	var responseData LoadValueResponse
+	err = json.Unmarshal(val, &responseData)
 	if err != nil {
-		return nil, fmt.Errorf("unable to decode data for key %s: %v", key, err)
+		return nil, err
 	}
-	return data.Value, nil
+
+	decodedValue, err := base64.StdEncoding.DecodeString(responseData.Value)
+	if err != nil {
+		return nil, err
+	}
+
+	return decodedValue, nil
 }
 
 func (s *CloudflareKVStorage) Delete(ctx context.Context, key string) error {
@@ -228,14 +241,28 @@ func (s *CloudflareKVStorage) Stat(ctx context.Context, key string) (certmagic.K
 	if err != nil {
 		return certmagic.KeyInfo{}, err
 	}
-	var data StorageData
-	if err := json.Unmarshal(dataBytes, &data); err != nil {
+
+	metadataMap, err := s.client.KV.Namespaces.Metadata.Get(s.ctx, s.NamespaceID, key, kv.NamespaceMetadataGetParams{
+		AccountID: cloudflare.String(s.AccountID),
+	})
+	if err != nil {
+		return certmagic.KeyInfo{}, err
+	}
+
+	metadataMapJson, err := json.Marshal(metadataMap)
+	if err != nil {
+		return certmagic.KeyInfo{}, err
+	}
+
+	var data Metadata
+	if err := json.Unmarshal(metadataMapJson, &data); err != nil {
 		return certmagic.KeyInfo{}, fmt.Errorf("unable to decode data for key %s: %v", key, err)
 	}
+
 	return certmagic.KeyInfo{
 		Key:        key,
 		Modified:   data.Modified,
-		Size:       int64(len(data.Value)),
+		Size:       int64(len(dataBytes)),
 		IsTerminal: false,
 	}, nil
 }
