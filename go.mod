@@ -1,25 +1,23 @@
 module github.com/mentimeter/caddy-storage-cf-kv
 
-go 1.18
+go 1.20
 
 require (
-	github.com/caddyserver/caddy/v2 v2.6.0
-	github.com/caddyserver/certmagic v0.21.5
+	github.com/caddyserver/caddy/v2 v2.7.5
+	github.com/caddyserver/certmagic v0.19.2
 	go.uber.org/zap v1.27.0
 )
 
 require (
+	github.com/mholt/acmez v1.2.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/caddyserver/zerossl v0.1.3 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudflare/cloudflare-go/v3 v3.1.0
-	github.com/francoispqt/gojay v1.2.13 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
 	github.com/google/pprof v0.0.0-20231212022811-ec68065c825e // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
 	github.com/libdns/libdns v0.2.2 // indirect
-	github.com/mholt/acmez/v3 v3.0.0 // indirect
 	github.com/miekg/dns v1.1.62 // indirect
 	github.com/onsi/ginkgo/v2 v2.13.2 // indirect
 	github.com/prometheus/client_golang v1.19.1 // indirect
@@ -36,7 +34,6 @@ require (
 	github.com/zeebo/blake3 v0.2.4 // indirect
 	go.uber.org/mock v0.4.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	go.uber.org/zap/exp v0.3.0 // indirect
 	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842 // indirect
 	golang.org/x/mod v0.18.0 // indirect
