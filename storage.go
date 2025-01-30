@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"os"
 	"strings"
 	"time"
 
@@ -89,20 +88,29 @@ func (s *CloudflareKVStorage) Provision(ctx caddy.Context) error {
 	s.Logger = ctx.Logger(s).Sugar()
 	s.ctx = ctx.Context
 
-	s.APIToken = strEnvOrDefault(s.APIToken, "CADDY_CLOUDFLARE_API_TOKEN", "")
-	s.AccountID = strEnvOrDefault(s.AccountID, "CADDY_CLOUDFLARE_ACCOUNT_ID", "")
-	s.NamespaceID = strEnvOrDefault(s.NamespaceID, "CADDY_CLOUDFLARE_NAMESPACE_ID", "")
+	// This adds support to the documented Caddy way to get runtime environment variables.
+	// Reference: https://caddyserver.com/docs/caddyfile/concepts#environment-variables
+	//
+	// So, with this, it should be able to do something like this:
+	// ```
+	// api_token {env.CLOUDFLARE_API_TOKEN}
+	// ```
+	// which would replace `{env.CLOUDFLARE_API_TOKEN}` with the environemnt variable value
+	// of CLOUDFLARE_API_TOKEN at runtime.
+	s.APIToken = caddy.NewReplacer().ReplaceAll(s.APIToken, "")
+	s.AccountID = caddy.NewReplacer().ReplaceAll(s.AccountID, "")
+	s.NamespaceID = caddy.NewReplacer().ReplaceAll(s.NamespaceID, "")
 
 	if s.APIToken == "" {
-		return fmt.Errorf("api_token must be provided")
+		return fmt.Errorf("api_token must be provided and not empty")
 	}
 
 	if s.AccountID == "" {
-		return fmt.Errorf("account_id must be provided")
+		return fmt.Errorf("account_id must be provided and not empty")
 	}
 
 	if s.NamespaceID == "" {
-		return fmt.Errorf("namespace_id must be provided")
+		return fmt.Errorf("namespace_id must be provided and not empty")
 	}
 
 	s.client = cloudflare.NewClient(
@@ -273,17 +281,6 @@ func (s *CloudflareKVStorage) Lock(ctx context.Context, key string) error {
 
 func (s *CloudflareKVStorage) Unlock(_ context.Context, key string) error {
 	return nil
-}
-
-// get string from env var if not already set
-func strEnvOrDefault(current, envVar, def string) string {
-	if current != "" {
-		return current
-	}
-	if val := os.Getenv(envVar); val != "" {
-		return val
-	}
-	return def
 }
 
 func (s CloudflareKVStorage) String() string {
