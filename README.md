@@ -2,7 +2,12 @@
 
 Use [Cloudflare KV](https://developers.cloudflare.com/api/resources/kv/) as [Caddy storage](https://caddyserver.com/docs/json/storage/).
 
-### Build custom Caddy with this storage
+### Caddy module name
+```
+caddy.storage.cloudflare_kv
+```
+
+### Build custom Caddy with this storage using [xcaddy](https://github.com/caddyserver/xcaddy)
 
 ```bash
 xcaddy build --with github.com/mentimeter/caddy-storage-cf-kv
@@ -31,7 +36,7 @@ or using environment variables
     storage cloudflare_kv {
         api_token "{env.CLOUDFLARE_API_TOKEN}"
         account_id "{env.CLOUDFLARE_ACCOUNT_ID}"
-        namespace_id "{env.CLOUDFLARE_NAMESPACE}"
+        namespace_id "{env.CLOUDFLARE_NAMESPACE_ID}"
     }
 }
 ```
@@ -49,7 +54,7 @@ For example, running with Cloudflare as the DNS resolver (using https://github.c
     storage cloudflare_kv {
         api_token "{env.CLOUDFLARE_API_TOKEN}"
         account_id "{env.CLOUDFLARE_ACCOUNT_ID}"
-        namespace_id "{env.CLOUDFLARE_NAMESPACE}"
+        namespace_id "{env.CLOUDFLARE_NAMESPACE_ID}"
     }
 }
 
