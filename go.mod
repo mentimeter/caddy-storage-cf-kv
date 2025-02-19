@@ -1,6 +1,6 @@
 module github.com/mentimeter/caddy-storage-cf-kv
 
-go 1.20
+go 1.22.2
 
 require (
 	github.com/caddyserver/caddy/v2 v2.7.5
@@ -9,7 +9,7 @@ require (
 )
 
 require (
-	github.com/mholt/acmez v1.2.0 // indirect
+	github.com/zeebo/assert v1.3.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudflare/cloudflare-go/v3 v3.1.0
@@ -18,6 +18,7 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
 	github.com/libdns/libdns v0.2.2 // indirect
+	github.com/mholt/acmez v1.2.0 // indirect
 	github.com/miekg/dns v1.1.62 // indirect
 	github.com/onsi/ginkgo/v2 v2.13.2 // indirect
 	github.com/prometheus/client_golang v1.19.1 // indirect
